@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+
+
+{% block style %}
+    <link rel="stylesheet" href="{{url_for('static',filename='/register.css')}}">
+{% endblock %}
+
+{% block script%}
+<script>
+    function register() {
+        const login = document.getElementById('register-login').value; 
+        const password = document.getElementById('register-password').value; 
+        const url='/json-rpc-api/';
+        const json={
+        'jsonrpc':'2.0',
+        'method':'register',
+        'params': {
+            'login': login,
+            'password': password
+        },
+        'id':Math.round(Math.random()*1000)
+    };
+        fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(json)
+        })
+        .then (function(response) {
+            return response.json()
+        })
+        .then (function (data){
+        if(data.error){
+            switch(data.error.code){
+                case 1:
+                    alert('Введите пароль');
+                    break;
+                case 2:
+                    alert('Длина пароля должна быть больше 8 символов');
+                    break;
+                case 3:
+                    alert('Пользователь с таким логином уже существует');
+                    break;
+                case 4:
+                    alert('Пароль должен состоять только из латинских букв, цифр и знаков препинания');
+                    break;
+                case 5:
+                    alert('Логин должен состоять из латинских букв');
+                    break;
+                case -32601:
+                    alert ('Странная ошибка')
+                    break;
+            }
+        }
+        else{  alert('Регистрация успешна!'); 
+                    window.location.href = '/';}
+    });
+}
+
+</script>
+{% endblock %}
+
+{% block main %}
+<div class="registration-container">
+    <h2>Регистрация</h2>
+    <div class="input-group">
+        <input type="text" id="register-login" placeholder="Логин" required>
+    </div>
+    <div class="input-group">
+        <input type="password" id="register-password" placeholder="Пароль" required>
+    </div>
+    <button class="register-button" onclick="register()">Регистрация</button>
+</div>
+{% endblock %}

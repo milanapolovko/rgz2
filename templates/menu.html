@@ -1,0 +1,295 @@
+{% extends "base.html" %}
+
+{% block style %}
+    <link rel="stylesheet" href="{{url_for('static',filename='/menu.css')}}">
+{% endblock %}
+
+{% block script%}
+<script>
+
+let currentInitiativeCount = 0; 
+const limit = 20;
+
+    function vote(initiative_id, vote) {
+        const url='/json-rpc-api/';
+        const json={
+        'jsonrpc':'2.0',
+        'method':'vote',
+        'params': {
+            'initiative_id': initiative_id,
+            'vote': vote
+        },
+        'id':Math.round(Math.random()*1000)};
+        fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify(json)
+        })
+        .then (function(response) {
+            return response.json()})
+        .then (function (data){
+            if(data.error){
+                switch(data.error.code){
+                    case 1:
+                        alert('Недостаточно данных для голосования');
+                        break;
+                    case 2:
+                        alert('Инициатива не найдена');
+                        break;   
+                    case 3:
+                        alert('Пользователь не авторизован');
+                        break;  
+                    case -32601:
+                        alert ('Странная ошибка')
+                        break;
+                }
+            }
+            else {
+                const initiativeItem = document.querySelector(`li[data-initiative-id="${initiative_id}"]`);
+                if (initiativeItem) {
+                    if (data.result ===null) {
+                        initiativeItem.remove();}
+                    initiativeItem.querySelector('.initiative-rating').innerText = `Голосов ${data.result.rating}`; 
+                }
+            }
+        });
+    }
+
+    
+    function deleteInitiative(initiative_id) {
+        const url='/json-rpc-api/';
+        const json={
+        'jsonrpc':'2.0',
+        'method':'delete_initiative',
+        'params': { initiative_id: initiative_id },
+        'id':Math.round(Math.random()*1000)};
+        fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify(json)
+        })
+        .then (function(response) {
+            return response.json()
+        })
+        .then (function (data){
+        if(data.error){
+            switch(data.error.code){
+                case 1:
+                    alert('Пользователь не авторизован');
+                    break;
+                case 3:
+                    alert('У вас нет прав для удаления этой инициативы');
+                    break;         
+                case -32601:
+                    alert ('Странная ошибка')
+                    break;
+            }
+        }
+        else {
+            location.reload(); 
+        }
+    });
+}
+
+function displayInitiatives() {
+    const url='/json-rpc-api/';
+    const json={
+        'jsonrpc':'2.0',
+        'method':'get_initiatives',
+        'params': { offset: currentInitiativeCount, limit: limit },
+        'id':Math.round(Math.random()*1000)
+    };
+    fetch(url, {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify(json)
+    })
+    .then (function(response) {
+        return response.json()
+    })
+    .then (function(data){
+        const initiativesList = document.getElementById('initiatives-list');
+        
+        if ( data.result && data.result.length > 0) {
+            
+            for (let initiative of data.result){ 
+                
+                const li = document.createElement('li');
+                li.setAttribute('data-initiative-id', initiative.id);
+                li.classList.add('initiative-item');
+                li.innerHTML =`
+                     <div class="header">
+                        <h3 class="initiative-title">${initiative.topic}</h3>
+                        <p class="date">Дата создания: ${initiative.date}</p>
+                    </div>
+                    <p class="initiative-text">${initiative.text}</p>
+                    <p class="initiative-rating">Голосов ${initiative.rating}</p>
+                    <div class="vote-buttons">
+                        <button onclick="vote('${initiative.id}', 'up')">За</button>
+                        <button onclick="vote('${initiative.id}', 'down')">Против</button>
+                    </div>
+                    <div class="user-actions">
+                        <button class="delete-button" onclick="deleteInitiative('${initiative.id}')">Удалить инициативу</button>
+                    </div>
+                      `;
+                initiativesList.appendChild(li);
+                
+            };
+
+            currentInitiativeCount += data.result.length; 
+            if (data.result.length < limit) {
+                document.getElementById('load-more-button').style.display = 'none';
+            } else {
+                document.getElementById('load-more-button').style.display = 'block';
+            }
+        } 
+        else {
+          
+            document.getElementById('load-more-button').style.display = 'none';
+        }
+    }); 
+}
+
+function editInitiative(initiativeId) {
+ 
+    const newTopic = prompt("Введите новый заголовок инициативы:");
+    const newText = prompt("Введите новый текст инициативы:");
+
+    if (newTopic && newText) {
+        const url = '/json-rpc-api/';
+        const json = {
+            'jsonrpc': '2.0',
+            'method': 'edit_initiative',
+            'params': { id: initiativeId, topic: newTopic, text: newText },
+            'id': Math.round(Math.random() * 1000)
+        };
+
+        fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(json)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.result) {
+                alert("Инициатива успешно обновлена.");
+                displayInitiatives(); 
+            } 
+        })
+       
+    }
+}
+
+function loadMoreInitiatives() {
+    
+    displayInitiatives(); 
+}
+
+function logout() {
+    const logoutButton = document.getElementById('logout-button');
+    const url='/json-rpc-api/';
+    const json={
+    'jsonrpc':'2.0',
+    'method':'logout',
+    'id':Math.round(Math.random()*1000)};
+    fetch(url, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(json)
+    })
+    .then (function(response) {
+        return response.json()})
+    .then (function (data){
+        if(data.error){
+            switch(data.error.code){ 
+                case -32601:
+                    alert ('Странная ошибка')
+                    break;
+            }
+        }
+        else {
+            window.location.href = '/';
+        }
+    });
+}
+
+function deleteAccount() {
+    const url = '/json-rpc-api/';
+    const confirmValue = prompt('Подтвердите удаление аккаунта (yes/no)');
+    if (confirmValue==='yes') { 
+        const json = {
+            'jsonrpc': '2.0',
+            'method': 'delete_account',
+            'params': { confirm: 'yes' },
+            'id': Math.round(Math.random() * 1000)
+        };
+
+        fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(json)
+        })
+        .then (function(response) {
+            return response.json()})
+        .then (function (data){
+            if(data.error){
+                switch(data.error.code){ 
+                    case 1:
+                        alert ('Удаление аккаунта отменено')
+                        break; 
+                    case -32601:
+                        alert ('Странная ошибка')
+                        break;   
+                    }
+                }  
+            else if (data.result) {
+                alert("Аккаунт успешно удален.");
+                window.location.href = '/';}
+            })
+        }
+    else if (confirmValue === 'no') {
+        alert('Удаление аккаунта отменено');
+    }
+}
+
+
+
+document.addEventListener("DOMContentLoaded", function() {
+    document.getElementById('logout-button')?.addEventListener('click', logout);
+    document.getElementById('delete-account-button')?.addEventListener('click', deleteAccount);
+    displayInitiatives();
+    document.getElementById('load-more-button').addEventListener('click', loadMoreInitiatives); 
+});
+
+</script>
+{% endblock %}
+
+{% block main %}
+
+<div class="user-actions">
+    {% if login %}
+                <p>Добро пожаловать, {{ login }}!</p>
+                <button class="logout-button" id="logout-button">Выйти</button>
+                <button class="delete-account-button" id="delete-account-button">Удалить аккаунт</button>
+                <p class="create-initiative-link"><a href="/initiative/">Создать инициативу</a></p>
+    {% else %}
+            <p>Пожалуйста, <a href="/login/">войдите</a> или <a href="/register/">зарегистрируйтесь</a>.</p>
+    {% endif %}        
+            {%if is_admin%}
+                <p class="edit-user-link"><a href="/admin/">Редактировать пользователя</a></p>
+            {% endif %}
+</div>
+
+<h1>Инициативы</h1>
+<ul id="initiatives-list"></ul>
+<button id="load-more-button" >Еще</button>
+
+{% endblock %}

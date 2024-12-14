@@ -1,0 +1,149 @@
+{% extends "base.html" %}
+
+{% block style %}
+<link rel="stylesheet" href="{{url_for('static',filename='/redact.css')}}">
+{% endblock %}
+
+{% block script%}
+<script>
+
+    function loadUsers() {
+        const url = '/json-rpc-api/';
+        const json = {
+            'jsonrpc': '2.0',
+            'method': 'get_users',
+            'params': {},
+            'id': Math.round(Math.random() * 1000)
+        };
+    
+        fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(json)
+        })
+        .then (function(response) {
+            return response.json()})
+        .then (function (data){
+            const usersList = document.getElementById('users-list');
+            usersList.innerHTML = ''; 
+    
+            if (data.result && data.result.length > 0) {
+                for (let user of data.result) {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td>${user.id}</td>
+                        <td>${user.login}</td>
+                        <td>
+                            <button onclick="deleteUser (${user.id})">Удалить</button>
+                            <button onclick="editUser (${user.id})">Редактировать</button>
+                        </td>
+                    `;
+                    usersList.appendChild(tr);
+                }
+            }
+        });
+    }
+    
+    function deleteUser (userId) {
+        if (confirm("Вы уверены, что хотите удалить этого пользователя?")) {
+            const url = '/json-rpc-api/';
+            const json = {
+                'jsonrpc': '2.0',
+                'method': 'delete_user',
+                'params': { user_id: userId },
+                'id': Math.round(Math.random() * 1000)
+            };
+    
+            fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(json)
+            })
+            .then (function(response) {
+                return response.json()})
+            .then (function (data){
+                if (data.error) {
+                    switch(data.error.code){        
+                        case -32601:
+                            alert ('Странная ошибка')
+                            break;
+                    }
+                }
+                else {
+                    loadUsers(); 
+                }
+            });
+        }
+    }
+    
+    function editUser (userId) {
+        const modal = document.getElementById('editUser Modal');
+        modal.style.display = 'block';
+        
+        document.getElementById('saveLogin').onclick = function() {
+
+            const newLogin = document.getElementById('newLogin').value;
+            
+            if (newLogin ) {
+                const url = '/json-rpc-api/';
+                const json = {
+                    'jsonrpc': '2.0',
+                    'method': 'edit_user',
+                    'params': { user_id: userId, new_login: newLogin },
+                    'id': Math.round(Math.random() * 1000)
+                };
+        
+                fetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(json)
+                })
+                .then (function(response) {
+                    return response.json()})
+                .then (function (data){
+                    if(data.error){
+                        switch(data.error.code){ 
+                            case -32601:
+                                alert ('Странная ошибка')
+                                break;
+                        }
+                    }
+                    loadUsers(); 
+                    modal.style.display = 'none';
+                });
+                
+            }
+        }
+    document.getElementById('cancel').onclick = function() {
+        modal.style.display = 'none';};
+}
+
+document.addEventListener('DOMContentLoaded', loadUsers);
+</script>
+{% endblock %}
+
+{% block main %}
+<h2>Управление пользователями</h2>
+<table id="users-table">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Логин</th>
+            <th>Действия</th>
+        </tr>
+    </thead>
+    <tbody id="users-list">
+       
+    </tbody>
+</table>
+
+<div id="editUser Modal">
+    <div class="modal-content">
+        <label for="newLogin">Введите новый логин:</label>
+        <input type="text" id="newLogin" />
+        <button id="saveLogin">Сохранить</button>
+        <button id="cancel">Отменить</button>
+    </div>
+</div>
+
+{% endblock %}

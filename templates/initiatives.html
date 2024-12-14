@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+
+
+{% block style %}
+<link rel="stylesheet" href="{{url_for('static',filename='/create.css')}}">
+{% endblock %} 
+
+{% block script%}
+<script>
+    function createInitiative() {
+        const topic = document.getElementById('initiative-topic').value;
+        const text = document.getElementById('initiative-text').value;
+        const url='/json-rpc-api/';
+        const json={
+        'jsonrpc':'2.0',
+        'method':'create_initiative',
+        'params': {
+            'topic': topic,
+            'text': text
+        },
+        'id':Math.round(Math.random()*1000)};
+        fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify(json)
+        })
+        .then (function(response) {
+            return response.json()
+        })
+        .then (function (data){
+        if(data.error){
+            switch(data.error.code){
+                case 1:
+                    alert('Недостаточно данных для создания инициативы');
+                    break;
+                case -32601:
+                    alert ('Странная ошибка')
+                    break;  
+            }
+        }
+        else{  
+            window.location.href = '/';}
+        });
+    }
+</script>
+{% endblock %}
+
+{% block main %}
+
+<div class="container">
+    <h2>Создать инициативу</h2>
+
+    <div class="form-group">
+        <input type="text" id="initiative-topic" placeholder="Название инициативы" required>
+    </div>
+
+    <div class="form-group">
+        <textarea id="initiative-text" placeholder="Описание инициативы" required></textarea>
+    </div>
+
+    <button onclick="createInitiative()">Создать инициативу</button>
+</div>
+
+{% endblock %}

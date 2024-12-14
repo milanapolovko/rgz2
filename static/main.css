@@ -1,0 +1,27 @@
+body{
+    margin: 0;
+}
+
+main{
+    margin-bottom: 40px;
+    padding: 10px;
+}
+
+header{
+    width: 100%; 
+    padding: 20px; 
+    margin-bottom: 30px;
+    padding: 20px;
+    background: rgb(238, 221, 121);
+}
+
+footer{
+    margin-top: 20px;
+    padding: 10px;
+    background: rgb(238, 221, 121);
+    text-align: right;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+}
