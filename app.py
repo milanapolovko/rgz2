@@ -46,7 +46,7 @@ def index():
         if current_app.config['DB_TYPE']=='postgres':
             cur.execute("SELECT * FROM admin WHERE login=%s;", (login,))
         else:
-            cur.execute("SELECT * FROM admin WHERE login=%s;", (login,))
+            cur.execute("SELECT * FROM admin WHERE login=?;", (login,))
         admin_user = cur.fetchone()
 
         if admin_user:
@@ -129,7 +129,7 @@ def json_rpc():
         if current_app.config['DB_TYPE']=='postgres':
             cur.execute("SELECT * FROM users WHERE login=%s;",(login,))
         else:   
-            cur.execute("SELECT * FROM users WHERE login=%s;",(login,))
+            cur.execute("SELECT * FROM users WHERE login=?;",(login,))
 
         user = cur.fetchone()
             
@@ -148,7 +148,7 @@ def json_rpc():
         if current_app.config['DB_TYPE']=='postgres':
             cur.execute("INSERT INTO users (login, password) VALUES (%s, %s);", (login, hashed_password))  
         else:
-            cur.execute("INSERT INTO users (login, password) VALUES (%s, %s);", (login, hashed_password)) 
+            cur.execute("INSERT INTO users (login, password) VALUES (?, ?);", (login, hashed_password)) 
         
         db_close(conn, cur)
 
@@ -177,7 +177,7 @@ def json_rpc():
         if current_app.config['DB_TYPE'] == 'postgres':
             cur.execute("SELECT id, topic, text, rating, date FROM initiatives LIMIT %s OFFSET %s;", (limit, offset))
         else:
-            cur.execute("SELECT id, topic, text, rating, date FROM initiatives LIMIT %s OFFSET %s;", (limit, offset))
+            cur.execute("SELECT id, topic, text, rating, date FROM initiatives LIMIT ? OFFSET ?;", (limit, offset))
 
         initiatives = cur.fetchall()
         db_close(conn, cur)
@@ -197,7 +197,7 @@ def json_rpc():
         if current_app.config['DB_TYPE']=='postgres':
             cur.execute("SELECT * FROM users WHERE login=%s;", (login,))
         else:
-            cur.execute("SELECT * FROM users WHERE login=%s;", (login,))
+            cur.execute("SELECT * FROM users WHERE login=?;", (login,))
         user = cur.fetchone()
         
         if user is None:
@@ -250,7 +250,7 @@ def json_rpc():
         if current_app.config['DB_TYPE']=='postgres':
             cur.execute("SELECT * FROM users WHERE login=%s;",(current_login,))
         else: 
-            cur.execute("SELECT * FROM users WHERE login=%s;",(current_login,))
+            cur.execute("SELECT * FROM users WHERE login=?;",(current_login,))
 
         user = cur.fetchone()
         user_id = user["id"]
@@ -258,7 +258,7 @@ def json_rpc():
         if current_app.config['DB_TYPE']=='postgres':
             cur.execute("INSERT INTO initiatives (user_id,topic, text) VALUES (%s,%s, %s) RETURNING id;", (user_id,topic, text))
         else:
-            cur.execute("INSERT INTO initiatives (user_id,topic, text) VALUES (%s,%s, %s) RETURNING id;", (user_id,topic, text))
+            cur.execute("INSERT INTO initiatives (user_id,topic, text) VALUES (?,?, ?) RETURNING id;", (user_id,topic, text))
         
         result = cur.fetchone() 
         initiative_id = result["id"] 
@@ -300,7 +300,7 @@ def json_rpc():
         if current_app.config['DB_TYPE']=='postgres':
             cur.execute("SELECT * FROM initiatives WHERE id=%s;", (initiative_id,))
         else: 
-            cur.execute("SELECT * FROM initiatives WHERE id=%s;", (initiative_id,))
+            cur.execute("SELECT * FROM initiatives WHERE id=?;", (initiative_id,))
         initiative = cur.fetchone()
 
         if initiative:
@@ -308,19 +308,19 @@ def json_rpc():
                 if current_app.config['DB_TYPE']=='postgres':
                     cur.execute("UPDATE initiatives SET rating=rating+1 WHERE id=%s;", (initiative_id,))
                 else:
-                    cur.execute("UPDATE initiatives SET rating=rating+1 WHERE id=%s;", (initiative_id,))
+                    cur.execute("UPDATE initiatives SET rating=rating+1 WHERE id=?;", (initiative_id,))
             
             elif vote == 'down':
                 if current_app.config['DB_TYPE']=='postgres':
                     cur.execute("UPDATE initiatives SET rating=rating-1 WHERE id=%s;", (initiative_id,))
                 else:
-                    cur.execute("UPDATE initiatives SET rating=rating-1 WHERE id=%s;", (initiative_id,))  
+                    cur.execute("UPDATE initiatives SET rating=rating-1 WHERE id=?;", (initiative_id,))  
 
             
             if current_app.config['DB_TYPE'] == 'postgres':
                 cur.execute("SELECT rating FROM initiatives WHERE id=%s;", (initiative_id,))
             else: 
-                cur.execute("SELECT rating FROM initiatives WHERE id=%s;", (initiative_id,))
+                cur.execute("SELECT rating FROM initiatives WHERE id=?;", (initiative_id,))
 
             current_rating_row  = cur.fetchone()
             current_rating = current_rating_row['rating']
@@ -330,7 +330,7 @@ def json_rpc():
                 if current_app.config['DB_TYPE'] == 'postgres':
                     cur.execute("DELETE FROM initiatives WHERE id=%s;", (initiative_id,))
                 else:
-                    cur.execute("DELETE FROM initiatives WHERE id=%s;", (initiative_id,))
+                    cur.execute("DELETE FROM initiatives WHERE id=?;", (initiative_id,))
 
                 db_close(conn, cur)
                 return {'jsonrpc': '2.0', 'result': None}
@@ -367,14 +367,14 @@ def json_rpc():
         if current_app.config['DB_TYPE']=='postgres':
             cur.execute("SELECT * FROM initiatives WHERE id=%s;", (initiative_id,))
         else:
-            cur.execute("SELECT * FROM initiatives WHERE id=%s;", (initiative_id,))    
+            cur.execute("SELECT * FROM initiatives WHERE id=?;", (initiative_id,))    
         initiative = cur.fetchone()
 
        
         if current_app.config['DB_TYPE']=='postgres': 
             cur.execute("SELECT id FROM admin WHERE login=%s;", (admin_login,))
         else:
-            cur.execute("SELECT id FROM admin WHERE login=%s;", (admin_login,))   
+            cur.execute("SELECT id FROM admin WHERE login=?;", (admin_login,))   
         admin = cur.fetchone()
         
     
@@ -388,7 +388,7 @@ def json_rpc():
             if current_app.config['DB_TYPE']=='postgres': 
                 cur.execute("DELETE FROM initiatives WHERE id=%s;", (initiative_id,))
             else:   
-                cur.execute("DELETE FROM initiatives WHERE id=%s;", (initiative_id,))
+                cur.execute("DELETE FROM initiatives WHERE id=?;", (initiative_id,))
             db_close(conn, cur) 
 
             return ({
@@ -400,7 +400,7 @@ def json_rpc():
             if current_app.config['DB_TYPE']=='postgres': 
                 cur.execute("SELECT user_id FROM initiatives WHERE id=%s;", (initiative_id,))
             else:
-                cur.execute("SELECT user_id FROM initiatives WHERE id=%s;", (initiative_id,)) 
+                cur.execute("SELECT user_id FROM initiatives WHERE id=?;", (initiative_id,)) 
             user_id = cur.fetchone()
                 
             if user_id is not None:
@@ -408,14 +408,14 @@ def json_rpc():
                 if current_app.config['DB_TYPE']=='postgres': 
                     cur.execute("SELECT id FROM users WHERE login=%s;", (admin_login,))
                 else:    
-                    cur.execute("SELECT id FROM users WHERE login=%s;", (admin_login,))
+                    cur.execute("SELECT id FROM users WHERE login=?;", (admin_login,))
                 user = cur.fetchone()
                     
                 if user is not None and user['id'] == user_id['user_id']:
                     if current_app.config['DB_TYPE']=='postgres': 
                         cur.execute("DELETE FROM initiatives WHERE id=%s;", (initiative_id,))
                     else:
-                        cur.execute("DELETE FROM initiatives WHERE id=%s;", (initiative_id,))  
+                        cur.execute("DELETE FROM initiatives WHERE id=?;", (initiative_id,))  
                     
                     db_close(conn, cur) 
                     
@@ -441,7 +441,7 @@ def json_rpc():
         if current_app.config['DB_TYPE']=='postgres': 
             cur.execute("DELETE FROM users WHERE id=%s;", (user_id,))
         else:
-            cur.execute("DELETE FROM users WHERE id=%s;", (user_id,))   
+            cur.execute("DELETE FROM users WHERE id=?;", (user_id,))   
         db_close(conn, cur)
        
         return {
@@ -473,7 +473,7 @@ def json_rpc():
         if current_app.config['DB_TYPE']=='postgres': 
             cur.execute("UPDATE users SET login=%s WHERE id=%s;", (new_login, user_id))
         else:
-            cur.execute("UPDATE users SET login=%s WHERE id=%s;", (new_login, user_id))
+            cur.execute("UPDATE users SET login=%s WHERE id=?;", (new_login, user_id))
         db_close(conn, cur)
         
         return {
@@ -510,7 +510,7 @@ def json_rpc():
         if current_app.config['DB_TYPE'] == 'postgres':
             cur.execute("SELECT * FROM admin WHERE login=%s;", (login,))
         else:
-            cur.execute("SELECT * FROM admin WHERE login=%s;", (login,))  
+            cur.execute("SELECT * FROM admin WHERE login=?;", (login,))  
         admin_user = cur.fetchone()
         
         if admin_user and admin_user['password'] == password:
@@ -545,14 +545,14 @@ def json_rpc():
         if current_app.config['DB_TYPE']=='postgres':
             cur.execute("SELECT * FROM users WHERE login=%s;", (login,))
         else:
-            cur.execute("SELECT * FROM users WHERE login=%s;", (login,))    
+            cur.execute("SELECT * FROM users WHERE login=?;", (login,))    
         user = cur.fetchone()
 
         if confirm == 'yes':
             if current_app.config['DB_TYPE']=='postgres':
                 cur.execute("DELETE FROM users WHERE login=%s;", (login,))
             else:    
-                cur.execute("DELETE FROM users WHERE login=%s;", (login,))
+                cur.execute("DELETE FROM users WHERE login=?;", (login,))
             session.clear()
             
             db_close(conn, cur)
