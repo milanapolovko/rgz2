@@ -475,7 +475,7 @@ def json_rpc():
         if current_app.config['DB_TYPE']=='postgres': 
             cur.execute("UPDATE users SET login=%s WHERE id=%s;", (new_login, user_id))
         else:
-            cur.execute("UPDATE users SET login=%s WHERE id=?;", (new_login, user_id))
+            cur.execute("UPDATE users SET login=? WHERE id=?;", (new_login, user_id))
         db_close(conn, cur)
         
         return {
