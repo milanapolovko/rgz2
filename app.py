@@ -515,19 +515,17 @@ def json_rpc():
         else:
             cur.execute("SELECT * FROM admin WHERE login=?;", (login,))  
         admin_user = cur.fetchone()
-        
+ 
+        db_close(conn, cur)
         if admin_user and admin_user['password'] == password:
 
             session['login'] = login  
-            db_close(conn, cur)
-            
             return {
                 'jsonrpc': '2.0',
                 'result': 'Вход выполнен как администратор',
                 'id': id,
             }
         else:
-            db_close(conn, cur)
             
             return {
                 'jsonrpc': '2.0',
