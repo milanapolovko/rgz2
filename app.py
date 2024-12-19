@@ -260,7 +260,7 @@ def json_rpc():
             result = cur.fetchone() 
             initiative_id = result["id"] 
         else:
-            cur.execute("INSERT INTO initiatives (user_id,topic, text) VALUES (?,?, ?) RETURNING id;", (user_id,topic, text))
+            cur.execute("INSERT INTO initiatives (user_id,topic, text) VALUES (?,?,?);", (user_id,topic, text))
             initiative_id = cur.lastrowid
 
         db_close(conn, cur)
