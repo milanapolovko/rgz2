@@ -516,7 +516,7 @@ def json_rpc():
             cur.execute("SELECT * FROM admin WHERE login=?;", (login,))  
         admin_user = cur.fetchone()
         
-        if admin_user and admin_user['password'] == password:
+        if admin_user['password'] == password:
 
             session['login'] = login  
             db_close(conn, cur)
