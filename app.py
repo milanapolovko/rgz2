@@ -180,6 +180,7 @@ def json_rpc():
             cur.execute("SELECT id, topic, text, rating, date FROM initiatives LIMIT ? OFFSET ?;", (limit, offset))
 
         initiatives = cur.fetchall()
+        initiatives = [dict(initiative) for initiative in initiatives]
         db_close(conn, cur)
 
         return {
@@ -324,7 +325,7 @@ def json_rpc():
                 cur.execute("SELECT rating FROM initiatives WHERE id=?;", (initiative_id,))
 
             current_rating_row  = cur.fetchone()
-            current_rating = current_rating_row['rating']
+            current_rating = current_rating_row['rating'] if current_rating_row else None
             
             
             if current_rating < -10:
@@ -493,11 +494,12 @@ def json_rpc():
            cur.execute("SELECT id, login FROM users;")
 
         users = cur.fetchall()
+        users_list = [{'id': user[0], 'login': user[1]} for user in users]
         db_close(conn, cur)
 
         return {
             'jsonrpc': '2.0',
-            'result': users,
+            'result': users_list,
             'id': id
         }
     
