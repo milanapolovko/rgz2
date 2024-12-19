@@ -257,11 +257,12 @@ def json_rpc():
 
         if current_app.config['DB_TYPE']=='postgres':
             cur.execute("INSERT INTO initiatives (user_id,topic, text) VALUES (%s,%s, %s) RETURNING id;", (user_id,topic, text))
+            result = cur.fetchone() 
+            initiative_id = result["id"] 
         else:
             cur.execute("INSERT INTO initiatives (user_id,topic, text) VALUES (?,?, ?) RETURNING id;", (user_id,topic, text))
-        
-        result = cur.fetchone() 
-        initiative_id = result["id"] 
+            initiative_id = cur.lastrowid
+
         db_close(conn, cur)
         
         return ({
