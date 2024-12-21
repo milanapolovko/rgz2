@@ -491,10 +491,10 @@ def json_rpc():
         if current_app.config['DB_TYPE']=='postgres': 
             cur.execute("SELECT id, login FROM users;")
         else:
-           cur.execute("SELECT id, login FROM users;")
+            cur.execute("SELECT id, login FROM users;")
 
         users = cur.fetchall()
-        users_list = [{'id': user[0], 'login': user[1]} for user in users]
+        users_list = [{'id': user['id'], 'login': user['login']} for user in users]
         db_close(conn, cur)
 
         return {
